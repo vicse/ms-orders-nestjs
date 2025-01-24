@@ -1,6 +1,6 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { Prisma, Order } from '@prisma/client';
+import { Prisma, Order, OrderItem } from '@prisma/client';
 import { RpcException } from '@nestjs/microservices';
 import { ChangeOrderStatusDto, OrderPaginationDto } from './dto';
 import { PaginationResponse } from '../common/interfaces';
@@ -9,9 +9,20 @@ import { PaginationResponse } from '../common/interfaces';
 export class OrdersRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async createOrder(params: { data: Prisma.OrderCreateInput }): Promise<Order> {
+  async createOrder(params: { data: Prisma.OrderCreateInput }) {
     const { data } = params;
-    return this.prisma.order.create({ data });
+    return this.prisma.order.create({
+      data,
+      include: {
+        OrderItem: {
+          select: {
+            price: true,
+            quantity: true,
+            productId: true,
+          },
+        },
+      },
+    });
   }
 
   async findAllOrders({
@@ -37,8 +48,13 @@ export class OrdersRepository {
     };
   }
 
-  async findOneOrder(id: string): Promise<Order> {
-    const order = await this.prisma.order.findFirst({ where: { id } });
+  async findOneOrder(id: string) {
+    const order = await this.prisma.order.findFirst({
+      where: { id },
+      include: {
+        OrderItem: { select: { price: true, quantity: true, productId: true } },
+      },
+    });
     if (!order)
       throw new RpcException({
         status: HttpStatus.NOT_FOUND,
