@@ -1,3 +1,3 @@
 export class Services {
-  static readonly PRODUCT_SERVICE = 'PRODUCT_SERVICE';
+  static readonly NATS_SERVICE = 'NATS_SERVICE';
 }

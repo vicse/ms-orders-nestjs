@@ -16,15 +16,15 @@ import { Product } from '../common/interfaces/product';
 export class OrdersService {
   constructor(
     private readonly ordersRepository: OrdersRepository,
-    @Inject(Services.PRODUCT_SERVICE)
-    private readonly productsClient: ClientProxy,
+    @Inject(Services.NATS_SERVICE)
+    private readonly client: ClientProxy,
   ) {}
 
   async create(createOrderDto: CreateOrderDto) {
     try {
       const productIds = createOrderDto.items.map((item) => item.productId);
       const products: Product[] = await firstValueFrom(
-        this.productsClient.send({ cmd: 'validate_product' }, productIds),
+        this.client.send({ cmd: 'validate_product' }, productIds),
       );
 
       const productsMap = new Map<number, Product>(
@@ -85,7 +85,7 @@ export class OrdersService {
     const order = await this.ordersRepository.findOneOrder(id);
     const productIds = order.OrderItem.map((item) => item.productId);
     const products: Product[] = await firstValueFrom(
-      this.productsClient.send({ cmd: 'validate_product' }, productIds),
+      this.client.send({ cmd: 'validate_product' }, productIds),
     );
     const productsMap = new Map<number, Product>(
       products.map((product) => [product.id, product]),
