@@ -1,17 +1,32 @@
 import { Injectable } from '@nestjs/common';
-import { CreateOrderDto } from './dto/create-order.dto';
+import {
+  ChangeOrderStatusDto,
+  CreateOrderDto,
+  OrderPaginationDto,
+} from './dto';
+import { OrdersRepository } from './orders.repository';
+import { Order } from '@prisma/client';
+import { PaginationResponse } from '../common/interfaces';
 
 @Injectable()
 export class OrdersService {
-  create(createOrderDto: CreateOrderDto) {
-    return 'This action adds a new order';
+  constructor(private readonly ordersRepository: OrdersRepository) {}
+
+  create(createOrderDto: CreateOrderDto): Promise<Order> {
+    return this.ordersRepository.createOrder({ data: createOrderDto });
   }
 
-  findAll() {
-    return `This action returns all orders`;
+  findAll(
+    orderPaginationDto: OrderPaginationDto,
+  ): Promise<PaginationResponse<Order>> {
+    return this.ordersRepository.findAllOrders(orderPaginationDto);
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} order`;
+  findOne(id: string): Promise<Order> {
+    return this.ordersRepository.findOneOrder(id);
+  }
+
+  changeStatus(changeOrderStatusDto: ChangeOrderStatusDto): Promise<Order> {
+    return this.ordersRepository.changeStatus(changeOrderStatusDto);
   }
 }
