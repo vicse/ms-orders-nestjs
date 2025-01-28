@@ -1,9 +1,9 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
-import { Prisma, Order, OrderItem } from '@prisma/client';
+import { Prisma, Order } from '@prisma/client';
 import { RpcException } from '@nestjs/microservices';
 import { ChangeOrderStatusDto, OrderPaginationDto } from './dto';
 import { PaginationResponse } from '../common/interfaces';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class OrdersRepository {
