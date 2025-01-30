@@ -1,8 +1,9 @@
-import { HttpStatus, Inject, Injectable } from '@nestjs/common';
+import { HttpStatus, Inject, Injectable, Logger } from '@nestjs/common';
 import {
   ChangeOrderStatusDto,
   CreateOrderDto,
   OrderPaginationDto,
+  PaidOrderDto,
 } from './dto';
 import { OrdersRepository } from './orders.repository';
 import { Order } from '@prisma/client';
@@ -15,6 +16,8 @@ import { OrderProducts } from './interfaces/order-products.interface';
 
 @Injectable()
 export class OrdersService {
+  private readonly logger = new Logger(OrdersService.name);
+
   constructor(
     private readonly ordersRepository: OrdersRepository,
     @Inject(Services.NATS_SERVICE)
@@ -105,7 +108,7 @@ export class OrdersService {
   }
 
   async createPaymentSession(order: OrderProducts) {
-    const paymentSession = await firstValueFrom(
+    return await firstValueFrom(
       this.client.send('create.payment.session', {
         orderId: order.id,
         currency: 'usd',
@@ -116,6 +119,11 @@ export class OrdersService {
         })),
       }),
     );
-    return paymentSession;
+  }
+
+  async paidOrder(paidOrderDto: PaidOrderDto) {
+    this.logger.log('Order Paid');
+    this.logger.log(paidOrderDto);
+    await this.ordersRepository.paidOrder(paidOrderDto);
   }
 }

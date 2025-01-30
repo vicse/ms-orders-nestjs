@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { Prisma, Order } from '@prisma/client';
 import { RpcException } from '@nestjs/microservices';
-import { ChangeOrderStatusDto, OrderPaginationDto } from './dto';
+import { ChangeOrderStatusDto, OrderPaginationDto, PaidOrderDto } from './dto';
 import { PaginationResponse } from '../common/interfaces';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -67,5 +67,22 @@ export class OrdersRepository {
     const order = await this.findOneOrder(id);
     if (order.status === status) return order;
     return this.prisma.order.update({ where: { id }, data: { status } });
+  }
+
+  async paidOrder({ orderId, stripePaymentId, receiptUrl }: PaidOrderDto) {
+    return this.prisma.order.update({
+      where: { id: orderId },
+      data: {
+        status: 'PAID',
+        paid: true,
+        paidAt: new Date(),
+        stripeChargeId: stripePaymentId,
+        OrderReceipt: {
+          create: {
+            receiptUrl,
+          },
+        },
+      },
+    });
   }
 }
