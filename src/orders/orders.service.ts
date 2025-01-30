@@ -11,6 +11,7 @@ import { Services } from '../common/constants';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 import { Product } from '../common/interfaces/product';
+import { OrderProducts } from './interfaces/order-products.interface';
 
 @Injectable()
 export class OrdersService {
@@ -101,5 +102,20 @@ export class OrdersService {
 
   changeStatus(changeOrderStatusDto: ChangeOrderStatusDto): Promise<Order> {
     return this.ordersRepository.changeStatus(changeOrderStatusDto);
+  }
+
+  async createPaymentSession(order: OrderProducts) {
+    const paymentSession = await firstValueFrom(
+      this.client.send('create.payment.session', {
+        orderId: order.id,
+        currency: 'usd',
+        items: order.OrderItem.map((orderItem) => ({
+          name: orderItem.name,
+          price: orderItem.price,
+          quantity: orderItem.quantity,
+        })),
+      }),
+    );
+    return paymentSession;
   }
 }
